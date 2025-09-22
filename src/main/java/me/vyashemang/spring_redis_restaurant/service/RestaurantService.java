@@ -5,14 +5,15 @@ import me.vyashemang.spring_redis_restaurant.dto.RestaurantDTO;
 import me.vyashemang.spring_redis_restaurant.dto.RestaurantRequestBody;
 import me.vyashemang.spring_redis_restaurant.model.MenuItem;
 import me.vyashemang.spring_redis_restaurant.model.Restaurant;
+import me.vyashemang.spring_redis_restaurant.repository.MenuItemRepository;
 import me.vyashemang.spring_redis_restaurant.repository.RestaurantRepository;
+import me.vyashemang.spring_redis_restaurant.utils.RestaurantUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -21,21 +22,24 @@ public class RestaurantService {
     @Autowired
     private RestaurantRepository restaurantRepository;
 
+    @Autowired
+    private MenuItemRepository menuItemRepository;
+
     @Cacheable(value = "restaurants", key = "'all-restaurants'")
     @Transactional(readOnly = true)
     public List<RestaurantDTO> getRestaurants() {
         List<Restaurant> restaurantList = restaurantRepository.findAllWithMenuItems();
-        return mapRestaurantListToDTO(restaurantList);
+        return RestaurantUtils.mapRestaurantListToDTO(restaurantList);
     }
 
     @Transactional
-    @CacheEvict(value = "restaurants", allEntries = true)
+    @CacheEvict(value = "restaurants", key = "'all-restaurants'", allEntries = true)
     public void createRestaurant(RestaurantRequestBody requestBody) {
         Restaurant restaurant = new Restaurant()
                 .setName(requestBody.getName())
                 .setAddress(requestBody.getAddress())
                 .setPhoneNumber(requestBody.getPhoneNumber());
-        
+
         restaurantRepository.save(restaurant);
     }
 
@@ -46,40 +50,44 @@ public class RestaurantService {
         if (restaurant == null) {
             throw new RuntimeException("Restaurant not found with id: " + id);
         }
-        return mapRestaurantToDTO(restaurant);
+        return RestaurantUtils.mapRestaurantToDTO(restaurant);
     }
 
-    private List<MenuItemDTO> mapMenuItemsToDTO(List<MenuItem> menuItems) {
-        List<MenuItemDTO> menuItemDTOs = new ArrayList<>();
 
-        for (MenuItem menuItem : menuItems) {
-            MenuItemDTO menuItemDTO = new MenuItemDTO()
-                    .setId(menuItem.getId())
-                    .setName(menuItem.getName())
-                    .setDescription(menuItem.getDescription())
-                    .setPrice(menuItem.getPrice())
-                    .setIsAvailable(menuItem.getIsAvailable())
-                    .setCreatedAt(menuItem.getCreatedAt());
 
-            menuItemDTOs.add(menuItemDTO);
+    /*===================== Menu Item Service =====================*/
+
+    @Cacheable(value = "restaurants", key = "'menu' + #id")
+    @Transactional(readOnly = true)
+    public List<MenuItemDTO> getRestaurantMenu(Long id) {
+        Restaurant restaurant = restaurantRepository.findRestaurantById(id);
+        List<MenuItem> menuItemList = restaurant.getMenuItems();
+        if (menuItemList.isEmpty()) {
+            throw new RuntimeException("Restaurant menu not found with id: " + id);
+        }
+        return RestaurantUtils.mapMenuItemsToDTO(menuItemList);
+    }
+
+    @CacheEvict(value = "restaurants", key = "'menu' + #id", allEntries = true)
+    public MenuItemDTO createRestaurantMenu(Long id, MenuItemDTO menuItemDTO) {
+
+        Restaurant restaurant = restaurantRepository.findRestaurantById(id);
+
+        if (restaurant == null) {
+            throw new RuntimeException("Restaurant not found: " + id);
         }
 
-        return menuItemDTOs;
+        MenuItem menuItem = new MenuItem()
+                .setName(menuItemDTO.getName())
+                .setDescription(menuItemDTO.getDescription())
+                .setPrice(menuItemDTO.getPrice())
+                .setRestaurant(restaurant)
+                .setIsAvailable(menuItemDTO.getIsAvailable() != null ? menuItemDTO.getIsAvailable() : true);
+
+        restaurant.addMenuItem(menuItem);
+        restaurantRepository.save(restaurant);
+
+        return menuItemDTO;
     }
 
-    private List<RestaurantDTO> mapRestaurantListToDTO(List<Restaurant> restaurantList) {
-        List<RestaurantDTO> restaurantDTOList = new ArrayList<>();
-        for (Restaurant restaurant : restaurantList) {
-            restaurantDTOList.add(mapRestaurantToDTO(restaurant));
-        }
-        return restaurantDTOList;
-    }
-
-    private RestaurantDTO mapRestaurantToDTO(Restaurant restaurant) {
-        return new RestaurantDTO()
-                .setName(restaurant.getName())
-                .setAddress(restaurant.getAddress())
-                .setPhoneNumber(restaurant.getPhoneNumber())
-                .setMenuItems(mapMenuItemsToDTO(restaurant.getMenuItems()));
-    }
 }
