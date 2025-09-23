@@ -40,7 +40,7 @@ public class RestaurantController {
             return ResponseEntity.status(201).body(response);
         } catch (Exception e) {
             BaseResponse<String> response = BaseResponse.badRequest("Failed to create restaurant: " + e.getMessage());
-            return ResponseEntity.status(400).body(response);
+            return ResponseEntity.status(500).body(response);
         }
     }
 

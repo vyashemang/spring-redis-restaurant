@@ -32,8 +32,8 @@ public class RestaurantService {
         return RestaurantUtils.mapRestaurantListToDTO(restaurantList);
     }
 
-    @Transactional
     @CacheEvict(value = "restaurants", key = "'all-restaurants'", allEntries = true)
+    @Transactional
     public void createRestaurant(RestaurantRequestBody requestBody) {
         Restaurant restaurant = new Restaurant()
                 .setName(requestBody.getName())
@@ -52,8 +52,6 @@ public class RestaurantService {
         }
         return RestaurantUtils.mapRestaurantToDTO(restaurant);
     }
-
-
 
     /*===================== Menu Item Service =====================*/
 

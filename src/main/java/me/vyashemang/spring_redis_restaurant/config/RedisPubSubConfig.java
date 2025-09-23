@@ -1,8 +1,10 @@
 package me.vyashemang.spring_redis_restaurant.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
@@ -10,6 +12,17 @@ import org.springframework.stereotype.Service;
 
 @Configuration
 public class RedisPubSubConfig {
+
+
+    @Bean
+    public StringRedisTemplate stringRedisTemplate(RedisConnectionFactory connectionFactory) {
+        return new StringRedisTemplate(connectionFactory);
+    }
+
+    @Bean
+    public ObjectMapper objectMapper() {
+        return new ObjectMapper().findAndRegisterModules();
+    }
 
     @Bean
     public RedisMessageListenerContainer redisContainer(RedisConnectionFactory redisConnectionFactory, MessageListenerAdapter listenerAdapter) {
@@ -29,15 +42,6 @@ public class RedisPubSubConfig {
 @Service
 class RedisSubscriber {
     public void onMessage(String message, String channel) {
-        System.out.println("Received on channel: " + channel + " : " + message );
+        System.out.println("Received on channel: " + channel + " : " + message);
     }
 }
-
-// todo: to send message to channel when the order is created
-//@Autowired
-//private StringRedisTemplate template;
-//
-//public void publishEvent(String orderUpdate) {
-//    template.convertAndSend("order-events", orderUpdate);
-//}
-

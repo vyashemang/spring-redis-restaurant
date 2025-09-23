@@ -1,5 +1,6 @@
 package me.vyashemang.spring_redis_restaurant.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -27,6 +28,7 @@ public class Order {
     @Column(name = "restaurant_id", insertable = false, updatable = false)
     private Long restaurantId;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, columnDefinition = "int2")
     private OrderStatus status;
 
@@ -50,6 +52,7 @@ public class Order {
     private Restaurant restaurant;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonManagedReference
     private List<OrderItem> orderItems = new ArrayList<>();
 
     @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
