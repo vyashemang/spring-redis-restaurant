@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 public class DeliveryPartnerService {
 
@@ -23,6 +25,17 @@ public class DeliveryPartnerService {
 
         DeliveryPartner savedDeliveryPartner = deliveryPartnerRepository.save(deliveryPartner);
         return mapToDeliveryPartnerDTO(savedDeliveryPartner);
+    }
+
+    @Transactional(readOnly = true)
+    public List<DeliveryPartnerDTO> getAvailableDeliveryPartners() {
+        List<DeliveryPartner> availableDeliveryPartners = deliveryPartnerRepository.getAvailableDeliverPartners();
+
+        if (availableDeliveryPartners.isEmpty()) {
+            throw new RuntimeException("No available delivery partners found");
+        }
+
+        return availableDeliveryPartners.stream().map(this::mapToDeliveryPartnerDTO).toList();
     }
 
     private DeliveryPartnerDTO mapToDeliveryPartnerDTO(DeliveryPartner deliveryPartner) {
