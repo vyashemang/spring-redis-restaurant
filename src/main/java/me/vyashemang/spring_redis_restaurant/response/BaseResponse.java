@@ -27,7 +27,7 @@ public class BaseResponse<T> implements Serializable {
                 .setData(data)
                 .setSuccess(true);
     }
-    
+
     public static <T> BaseResponse<T> success(String message, T data) {
         return new BaseResponse<T>()
                 .setStatus(200)
@@ -36,7 +36,6 @@ public class BaseResponse<T> implements Serializable {
                 .setSuccess(true);
     }
 
-    
     public static <T> BaseResponse<T> created(String message, T data) {
         return new BaseResponse<T>()
                 .setStatus(201)
@@ -44,21 +43,21 @@ public class BaseResponse<T> implements Serializable {
                 .setData(data)
                 .setSuccess(true);
     }
-    
+
     public static <T> BaseResponse<T> error(int status, String message) {
         return new BaseResponse<T>()
                 .setStatus(status)
                 .setMessage(message)
                 .setSuccess(false);
     }
-    
+
     public static <T> BaseResponse<T> notFound(String message) {
         return new BaseResponse<T>()
                 .setStatus(404)
                 .setMessage(message)
                 .setSuccess(false);
     }
-    
+
     public static <T> BaseResponse<T> badRequest(String message) {
         return new BaseResponse<T>()
                 .setStatus(400)

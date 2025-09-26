@@ -53,7 +53,7 @@ public class RestaurantService {
         return RestaurantUtils.mapRestaurantToDTO(restaurant);
     }
 
-    /*===================== Menu Item Service =====================*/
+    /* ===================== Menu Item Service ===================== */
 
     @Cacheable(value = "restaurants", key = "'menu' + #id")
     @Transactional(readOnly = true)

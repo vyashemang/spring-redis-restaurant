@@ -7,14 +7,12 @@ import me.vyashemang.spring_redis_restaurant.repository.OrderRepository;
 import me.vyashemang.spring_redis_restaurant.repository.RestaurantRepository;
 import me.vyashemang.spring_redis_restaurant.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 @Service
 public class OrderService {
