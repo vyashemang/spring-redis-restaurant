@@ -1,6 +1,9 @@
 package me.vyashemang.spring_redis_restaurant.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import me.vyashemang.spring_redis_restaurant.service.DeliveryPartnerService;
+import me.vyashemang.spring_redis_restaurant.service.RedisSubscriber;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -12,8 +15,6 @@ import org.springframework.stereotype.Service;
 
 @Configuration
 public class RedisPubSubConfig {
-
-
     @Bean
     public StringRedisTemplate stringRedisTemplate(RedisConnectionFactory connectionFactory) {
         return new StringRedisTemplate(connectionFactory);
@@ -35,13 +36,5 @@ public class RedisPubSubConfig {
     @Bean
     public MessageListenerAdapter listenerAdapter(RedisSubscriber subscriber) {
         return new MessageListenerAdapter(subscriber, "onMessage");
-    }
-
-}
-
-@Service
-class RedisSubscriber {
-    public void onMessage(String message, String channel) {
-        System.out.println("Received on channel: " + channel + " : " + message);
     }
 }
