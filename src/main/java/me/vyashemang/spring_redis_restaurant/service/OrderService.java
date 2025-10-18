@@ -3,6 +3,7 @@ package me.vyashemang.spring_redis_restaurant.service;
 import me.vyashemang.spring_redis_restaurant.dto.Item;
 import me.vyashemang.spring_redis_restaurant.dto.OrderDTO;
 import me.vyashemang.spring_redis_restaurant.model.*;
+import me.vyashemang.spring_redis_restaurant.repository.DeliveryPartnerRepository;
 import me.vyashemang.spring_redis_restaurant.repository.OrderRepository;
 import me.vyashemang.spring_redis_restaurant.repository.RestaurantRepository;
 import me.vyashemang.spring_redis_restaurant.repository.UserRepository;
@@ -25,6 +26,8 @@ public class OrderService {
     private RestaurantRepository restaurantRepository;
     @Autowired
     private OrderEventPublisher orderEventPublisher;
+    @Autowired
+    private DeliveryPartnerRepository deliveryPartnerRepository;
 
     @Transactional
     public OrderDTO createOrder(OrderDTO orderDTO) {
@@ -80,6 +83,26 @@ public class OrderService {
 
         // Return the saved order as DTO
         return mapOrderToDTO(savedOrder);
+    }
+
+    @Transactional
+    public void updateOrderStatus(Long orderId, OrderStatus orderStatus) {
+        Order order = orderRepository.getReferenceById(orderId);
+
+        if (order == null) {
+            throw new RuntimeException("Order Id " + orderId + " not found");
+        }
+
+        order.setStatus(orderStatus);
+        orderRepository.save(order);
+
+        orderEventPublisher.publishOrderUpdatedEvent(order);
+
+        if (orderStatus.equals(OrderStatus.DELIVERED) || orderStatus.equals(OrderStatus.CANCELLED)) {
+            DeliveryPartner deliveryPartner = order.getOrderAssignment().getDeliveryPartner();
+            deliveryPartner.setStatus(DeliveryPartnerStatus.AVAILABLE);
+            deliveryPartnerRepository.save(deliveryPartner);
+        }
     }
 
     // Helper method to map Order entity to DTO

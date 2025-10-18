@@ -5,11 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import me.vyashemang.spring_redis_restaurant.dto.DeliveryPartnerDTO;
 import me.vyashemang.spring_redis_restaurant.dto.OrderEventDTO;
-import me.vyashemang.spring_redis_restaurant.model.DeliveryPartner;
-import me.vyashemang.spring_redis_restaurant.model.DeliveryPartnerStatus;
-import me.vyashemang.spring_redis_restaurant.model.Order;
-import me.vyashemang.spring_redis_restaurant.model.OrderStatus;
+import me.vyashemang.spring_redis_restaurant.model.*;
 import me.vyashemang.spring_redis_restaurant.repository.DeliveryPartnerRepository;
+import me.vyashemang.spring_redis_restaurant.repository.OrderAssignmentRepository;
 import me.vyashemang.spring_redis_restaurant.repository.OrderRepository;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
@@ -32,7 +30,10 @@ public class DeliveryPartnerService {
     private ObjectMapper objectMapper;
     @Autowired
     private RedissonClient redissonClient;
-
+    @Autowired
+    private OrderEventPublisher orderEventPublisher;
+    @Autowired
+    private OrderAssignmentRepository orderAssignmentRepository;
 
     @Transactional
     public DeliveryPartnerDTO createDeliveryPartner(DeliveryPartnerDTO deliveryPartnerDTO) {
@@ -69,7 +70,11 @@ public class DeliveryPartnerService {
                 log.info("Lock acquired for order id: {}", orderEventDTO.getOrderId());
                 List<DeliveryPartner> availableDeliverPartners = deliveryPartnerRepository.getAvailableDeliverPartners();
 
+                Order order = orderRepository.getReferenceById(orderEventDTO.getOrderId());
+
                 if (availableDeliverPartners.isEmpty()) {
+                    // todo: change the topic for retry and add the scheduler
+                    orderEventPublisher.publishOrderCreatedEvent(order);
                     throw new RuntimeException("No delivery partners are available");
                 }
 
@@ -79,9 +84,19 @@ public class DeliveryPartnerService {
                 chosenDeliveryPartner.setStatus(DeliveryPartnerStatus.BUSY);
                 deliveryPartnerRepository.save(chosenDeliveryPartner);
 
-                Order order = orderRepository.getReferenceById(orderEventDTO.getOrderId());
+                // Mark order as dispatched
                 order.setStatus(OrderStatus.DISPATCHED);
                 orderRepository.save(order);
+                orderEventPublisher.publishOrderUpdatedEvent(order);
+
+                // Add entry in order assignment
+                OrderAssignment orderAssignment = new OrderAssignment()
+                        .setOrderId(order.getId())
+                        .setDeliveryId(chosenDeliveryPartner.getId())
+                        .setOrder(order)
+                        .setDeliveryPartner(chosenDeliveryPartner);
+
+                orderAssignmentRepository.save(orderAssignment);
             }
         } catch (JsonProcessingException | InterruptedException e) {
             throw new RuntimeException(e);

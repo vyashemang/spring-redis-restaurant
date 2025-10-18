@@ -17,11 +17,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static me.vyashemang.spring_redis_restaurant.constant.RedisPubSubConstants.NOTIFICATION_CHANNEL;
+import static me.vyashemang.spring_redis_restaurant.constant.RedisPubSubConstants.ORDER_EVENTS_CHANNEL;
+
 @Service
 public class OrderEventPublisher {
     private static final Logger logger = LoggerFactory.getLogger(OrderEventPublisher.class);
-
-    private static final String ORDER_EVENTS_CHANNEL = "order-events";
 
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
@@ -49,7 +50,11 @@ public class OrderEventPublisher {
             OrderEventDTO orderEvent = mapOrderToEventDTO(order, eventType);
             String eventJson = objectMapper.writeValueAsString(orderEvent);
 
-            stringRedisTemplate.convertAndSend(ORDER_EVENTS_CHANNEL, eventJson);
+            if (eventType.equals("ORDER_CREATED")) {
+                stringRedisTemplate.convertAndSend(ORDER_EVENTS_CHANNEL, eventJson);
+            }
+            stringRedisTemplate.convertAndSend(NOTIFICATION_CHANNEL, eventJson);
+
             logger.info("Published {} event for order ID: {}", eventType, order.getId());
 
         } catch (JsonProcessingException e) {

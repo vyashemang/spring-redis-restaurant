@@ -1,9 +1,7 @@
 package me.vyashemang.spring_redis_restaurant.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import me.vyashemang.spring_redis_restaurant.service.DeliveryPartnerService;
 import me.vyashemang.spring_redis_restaurant.service.RedisSubscriber;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -11,7 +9,9 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
-import org.springframework.stereotype.Service;
+
+import static me.vyashemang.spring_redis_restaurant.constant.RedisPubSubConstants.NOTIFICATION_CHANNEL;
+import static me.vyashemang.spring_redis_restaurant.constant.RedisPubSubConstants.ORDER_EVENTS_CHANNEL;
 
 @Configuration
 public class RedisPubSubConfig {
@@ -29,7 +29,8 @@ public class RedisPubSubConfig {
     public RedisMessageListenerContainer redisContainer(RedisConnectionFactory redisConnectionFactory, MessageListenerAdapter listenerAdapter) {
         RedisMessageListenerContainer container = new RedisMessageListenerContainer();
         container.setConnectionFactory(redisConnectionFactory);
-        container.addMessageListener(listenerAdapter, new ChannelTopic("order-events"));
+        container.addMessageListener(listenerAdapter, new ChannelTopic(ORDER_EVENTS_CHANNEL));
+        container.addMessageListener(listenerAdapter, new ChannelTopic(NOTIFICATION_CHANNEL));
         return container;
     }
 
