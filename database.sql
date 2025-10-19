@@ -79,3 +79,7 @@ CREATE TABLE order_assignments (
     delivery_id BIGINT NOT NULL REFERENCES delivery_partners(id) ON DELETE CASCADE,
     assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+
+ALTER TABLE orders
+ADD CONSTRAINT status CHECK (status IN ('PLACED', 'COOKING', 'DISPATCHED', 'DELIVERED', 'CANCELLED', 'PENDING'));

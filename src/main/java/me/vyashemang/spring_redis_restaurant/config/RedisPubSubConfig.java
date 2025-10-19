@@ -10,8 +10,7 @@ import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
 
-import static me.vyashemang.spring_redis_restaurant.constant.RedisPubSubConstants.NOTIFICATION_CHANNEL;
-import static me.vyashemang.spring_redis_restaurant.constant.RedisPubSubConstants.ORDER_EVENTS_CHANNEL;
+import static me.vyashemang.spring_redis_restaurant.constant.RedisPubSubConstants.*;
 
 @Configuration
 public class RedisPubSubConfig {
@@ -31,6 +30,7 @@ public class RedisPubSubConfig {
         container.setConnectionFactory(redisConnectionFactory);
         container.addMessageListener(listenerAdapter, new ChannelTopic(ORDER_EVENTS_CHANNEL));
         container.addMessageListener(listenerAdapter, new ChannelTopic(NOTIFICATION_CHANNEL));
+        container.addMessageListener(listenerAdapter, new ChannelTopic(RETRY_ORDER_ASSIGNMENT_CHANNEL));
         return container;
     }
 

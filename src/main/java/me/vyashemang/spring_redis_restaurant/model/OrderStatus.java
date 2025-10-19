@@ -1,5 +1,5 @@
 package me.vyashemang.spring_redis_restaurant.model;
 
 public enum OrderStatus {
-    PLACED, COOKING, DISPATCHED, DELIVERED, CANCELLED;
+    PLACED, COOKING, DISPATCHED, DELIVERED, CANCELLED, PENDING;
 }

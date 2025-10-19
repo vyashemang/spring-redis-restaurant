@@ -74,7 +74,9 @@ public class DeliveryPartnerService {
 
                 if (availableDeliverPartners.isEmpty()) {
                     // todo: change the topic for retry and add the scheduler
-                    orderEventPublisher.publishOrderCreatedEvent(order);
+                    order.setStatus(OrderStatus.PENDING);
+                    orderRepository.save(order);
+                    orderEventPublisher.publishOrderAssignmentRetryEvent(order);
                     throw new RuntimeException("No delivery partners are available");
                 }
 
